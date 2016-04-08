@@ -1,4 +1,4 @@
-package io.github.detig_iii.regioneffects;
+package ch.swisssmp.regioneffects;
 
 import java.io.File;
 import java.io.FileOutputStream;

@@ -1,4 +1,4 @@
-package io.github.detig_iii.regioneffects;
+package ch.swisssmp.regioneffects;
 
 import java.util.Map;
 import java.util.Set;
@@ -14,7 +14,7 @@ import org.bukkit.potion.PotionEffectType;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
-import io.github.detig_iii.regioneffects.Main;
+import ch.swisssmp.regioneffects.Main;
 
 public class RegionEffectPlayerCommand implements CommandExecutor{
     CommandSender _sender;

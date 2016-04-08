@@ -1,4 +1,4 @@
-main: io.github.detig_iii.regioneffects.Main
+main: ch.swisssmp.regioneffects.Main
 version: 1.0
 name: RegionEffects
 author: detig_iii
