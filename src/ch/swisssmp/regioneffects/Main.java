@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -85,13 +86,19 @@ public class Main extends JavaPlugin implements Listener{
     	Area area = (Area)event.getArea();
     	Player player = event.getPlayer();
     	if(regions.contains(area.getName())){
-    		ConfigurationSection region = regions.getConfigurationSection(area.getName());
-    		Set<String> effects = region.getKeys(false);
+    		ConfigurationSection regionSection = regions.getConfigurationSection(area.getName());
+    		if(regionSection.contains("permissions")){
+        		List<String> permissionList = regionSection.getStringList("permissions");
+        		if(!playerIsPermitted(player, permissionList))
+        			return;
+    		}
+    		ConfigurationSection effectSection = regionSection.getConfigurationSection("effects");
+    		Set<String> effects = effectSection.getKeys(false);
     		String[] effectArray = new String[effects.size()];
     		effects.toArray(effectArray);
     		for(int i = 0; i < effectArray.length;i++){
     			PotionEffect potionEffect;
-    			ConfigurationSection potion = region.getConfigurationSection(effectArray[i]);
+    			ConfigurationSection potion = effectSection.getConfigurationSection(effectArray[i]);
     			String _type = potion.getString("type");
     			PotionEffectType type = PotionEffectType.getByName(_type);
     			int duration = potion.getInt("duration");
@@ -121,20 +128,33 @@ public class Main extends JavaPlugin implements Listener{
     	Area area = (Area)event.getArea();
     	Player player = event.getPlayer();
     	if(regions.contains(area.getName())){
-    		ConfigurationSection region = regions.getConfigurationSection(area.getName());
-    		Set<String> effects = region.getKeys(false);
-    		String[] effectArray = new String[effects.size()];
-    		effects.toArray(effectArray);
-    		for(int i = 0; i < effectArray.length;i++){
-    			ConfigurationSection potion = region.getConfigurationSection(effectArray[i]);
-    			if(potion.getBoolean("regionOnly")==true){
-        			String _type = potion.getString("type");
-        			PotionEffectType type = PotionEffectType.getByName(_type);
-        			if(player.hasPotionEffect(type))
-        				player.removePotionEffect(type);
-    			}
+    		ConfigurationSection regionSection = regions.getConfigurationSection(area.getName());
+    		if(regionSection.contains("effects")){
+        		ConfigurationSection effectSection = regionSection.getConfigurationSection("effects");
+        		Set<String> effects = effectSection.getKeys(false);
+        		String[] effectArray = new String[effects.size()];
+        		effects.toArray(effectArray);
+        		for(int i = 0; i < effectArray.length;i++){
+        			String effectName = effectArray[i];
+        			if(effectName.equals("must")||effectName.equals("mustnot"))
+        				continue;
+        			ConfigurationSection potion = effectSection.getConfigurationSection(effectArray[i]);
+        			if(potion.getBoolean("regionOnly")==true){
+            			String _type = potion.getString("type");
+            			PotionEffectType type = PotionEffectType.getByName(_type);
+            			if(player.hasPotionEffect(type))
+            				player.removePotionEffect(type);
+        			}
+        		}
     		}
     	}
+    }
+    private boolean playerIsPermitted(Player player, List<String> permissions){
+		for(String permission : permissions){
+			if(!player.hasPermission(permission))
+				return false;
+		}
+    	return true;
     }
     
     private Color parseColor(String colordata){

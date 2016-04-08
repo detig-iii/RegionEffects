@@ -1,5 +1,7 @@
 package ch.swisssmp.regioneffects;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -71,8 +73,8 @@ public class RegionEffectPlayerCommand implements CommandExecutor{
 			specific = true;
 			regionOnly = true;
 		}
-		else if((command.equals("ap"))||(command.equals("addpermission"))){
-			command = "addpermissions";
+		else if((command.equals("ac"))){
+			command = "addcondition";
 		}
 		else if((command.equals("change"))||(command.equals("e"))||(command.equals("edit"))){
 			command = "add";
@@ -80,11 +82,13 @@ public class RegionEffectPlayerCommand implements CommandExecutor{
 		else if((command.equals("delete"))||(command.equals("r"))){
 			command = "remove";
 		}
-		else if((command.equals("rp"))||(command.equals("removepermission"))){
-			command = "removepermissions";
+		else if((command.equals("rc"))){
+			command = "removecondition";
 		}
 		String effect;
 		ConfigurationSection regionSection;
+		ConfigurationSection effectSection;
+		List<String> permissionList;
 		switch(command){
 		case "add":
 	    	if(args.length < 3){
@@ -143,11 +147,15 @@ public class RegionEffectPlayerCommand implements CommandExecutor{
 					regionSection = Main.regions.createSection(region);
 				}
 				else regionSection = Main.regions.getConfigurationSection(region);
-				ConfigurationSection potionSection;
-				if(!regionSection.contains(effect)){
-					potionSection = regionSection.createSection(effect);
+				if(!regionSection.contains("effects")){
+					effectSection = regionSection.createSection("effects");
 				}
-				else potionSection = regionSection.getConfigurationSection(effect);
+				else effectSection = regionSection.getConfigurationSection("effects");
+				ConfigurationSection potionSection;
+				if(!effectSection.contains(effect)){
+					potionSection = effectSection.createSection(effect);
+				}
+				else potionSection = effectSection.getConfigurationSection(effect);
 				potionSection.set("type", effect);
 				potionSection.set("duration", time);
 				potionSection.set("amplifier", amplifier);
@@ -176,8 +184,15 @@ public class RegionEffectPlayerCommand implements CommandExecutor{
 				sendMessage("Region "+region+" nicht gefunden. (Existiert nicht oder hat keine Effekte)");
 				break;
 			}
-			if(regionSection.contains(effect)){
-				regionSection.set(effect,  null);
+			if(regionSection.contains("effects")){
+				effectSection = regionSection.getConfigurationSection("effects");
+			}
+			else{
+				sendMessage("Region "+region+" hat keine Effekte.");
+				break;
+			}
+			if(effectSection.contains(effect)){
+				effectSection.set(effect,  null);
 				sendMessage("Effekt "+effect+" in der Region "+region+" entfernt!");
 			}
 			else{
@@ -200,10 +215,33 @@ public class RegionEffectPlayerCommand implements CommandExecutor{
 				sendMessage("Region "+region+" nicht gefunden. (Existiert nicht oder hat keine Effekte)");
 				break;
 			}
-			sendMessage("RegionEffects Information:");
 			if(args.length>2){
 				effect = args[2];
-				ConfigurationSection potion = regionSection.getConfigurationSection(effect);
+				if(effect.equals("permissions")){
+					if(regionSection.contains("permissions")){
+						permissionList = regionSection.getStringList("permissions");
+					}
+					else{
+						sendMessage("Region "+region+" hat keine Berechtigungs-Einschränkungen.");
+						break;
+					}
+					sendMessage("RegionEffects Region "+region+" Effekt "+effect+" Permissions:");
+					sendMessage("------");
+					sendMessage("Spieler benötigen:");
+					for(String permission : permissionList)
+						sendMessage(permission);
+					sendMessage("------");
+					break;
+				}
+				if(regionSection.contains("effects")){
+					effectSection = regionSection.getConfigurationSection("effects");
+				}
+				else{
+					sendMessage("Region "+region+" hat keine Effekte.");
+					break;
+				}
+				sendMessage("RegionEffects Information:");
+				ConfigurationSection potion = effectSection.getConfigurationSection(effect);
 				String _type = potion.getString("type");
 				int duration = potion.getInt("duration");
 				amplifier = potion.getInt("amplifier");
@@ -220,10 +258,20 @@ public class RegionEffectPlayerCommand implements CommandExecutor{
 				sendMessage("Farbe: "+_color);
 				sendMessage("Spezifisch: "+specific);
 				sendMessage("Nur innnerhalb der Region: "+regionOnly);
+				sendMessage("Bedingungen anzeigen:");
+				sendMessage("/re "+region+" info "+effect+" permissions");
 			}
 			else{
+				sendMessage("RegionEffects Information:");
 				String message = region+": ";
-				Set<String> effects = regionSection.getKeys(false);
+				if(regionSection.contains("effects")){
+					effectSection = regionSection.getConfigurationSection("effects");
+				}
+				else{
+					sendMessage("Region "+region+" hat keine Effekte.");
+					break;
+				}
+				Set<String> effects = effectSection.getKeys(false);
 				for (String effectName : effects){
 					message += effectName+", ";
 				}
@@ -231,12 +279,14 @@ public class RegionEffectPlayerCommand implements CommandExecutor{
 				sendMessage(message);
 			}
 			break;
-		case "addpermissions":
-			//re [region] ap [must OR mustnot] [permission]
-	    	if(args.length < 4){
+		case "addcondition":
+			String permission;
+			//re [region] ap [permission]
+	    	if(args.length < 3){
 	    		displayHelp();
 	    		return false;
 	    	}
+    		permission = args[2].trim();
 			if(Main.regions.contains(region)){
 				regionSection = Main.regions.getConfigurationSection(region);
 			}
@@ -244,15 +294,19 @@ public class RegionEffectPlayerCommand implements CommandExecutor{
 				sendMessage("Region "+region+" nicht gefunden. (Existiert nicht oder hat keine Effekte)");
 				break;
 			}
-			String mode = args[2];
-			if(mode!="must")
+			permissionList = regionSection.getStringList("permissions");
+			if(!permissionList.contains(permission))
+				permissionList.add(permission);
+			regionSection.set("permissions", permissionList);
+			sendMessage("Bedingung "+permission+" der Region "+region+" hinzugefügt.");
 			break;
-		case "removepermissions":
-			//re [region] rp [must OR mustnot] [permission]
-	    	if(args.length < 4){
+		case "removecondition":
+			//re [region] rp [permission]
+	    	if(args.length < 3){
 	    		displayHelp();
 	    		return false;
 	    	}
+    		permission = args[2].trim();
 			if(Main.regions.contains(region)){
 				regionSection = Main.regions.getConfigurationSection(region);
 			}
@@ -260,6 +314,14 @@ public class RegionEffectPlayerCommand implements CommandExecutor{
 				sendMessage("Region "+region+" nicht gefunden. (Existiert nicht oder hat keine Effekte)");
 				break;
 			}
+			if(!regionSection.contains("permissions")){
+				permissionList = new ArrayList<String>();
+			}
+			else permissionList = regionSection.getStringList("permissions");
+			if(permissionList.contains(permission))
+				permissionList.remove(permission);
+			regionSection.set("permissions", permissionList);
+			sendMessage("Bedingung "+permission+" von der Region "+region+" entfernt.");
 			break;
 		default:
     		displayHelp();
@@ -275,6 +337,8 @@ public class RegionEffectPlayerCommand implements CommandExecutor{
 		sendMessage("/re [Region] [Aktion*] [Effekt] [Dauer=10] [Verstärker=0] [Umgebung=Nein] [Partikel=Ja] [Farbe=Standard]");
 		sendMessage("/re [Region] remove [Effekt]");
 		sendMessage("/re [Region] clear");
+		sendMessage("/re [Region] addcondition [permission]");
+		sendMessage("/re [Region] removecondition [permission]");
 		sendMessage("*Aktionen: add, addspecific, addregionOnly, addspecificregiononly");
 		sendMessage("/re help Aktionen");
     }
