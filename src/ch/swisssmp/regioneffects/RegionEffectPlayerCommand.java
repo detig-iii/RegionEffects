@@ -85,6 +85,9 @@ public class RegionEffectPlayerCommand implements CommandExecutor{
 		else if((command.equals("rc"))){
 			command = "removecondition";
 		}
+		else if((command.equals("cc"))||(command.equals("clearcondition"))){
+			command = "clearconditions";
+		}
 		String effect;
 		ConfigurationSection regionSection;
 		ConfigurationSection effectSection;
@@ -125,13 +128,13 @@ public class RegionEffectPlayerCommand implements CommandExecutor{
 				}
 			}
 			if(args.length>5){
-				if(args[5].toLowerCase()=="true" || args[5].toLowerCase()=="ja")
+				if(args[5].toLowerCase().equals("true") || args[5].toLowerCase().equals("ja"))
 					ambient = true;
 				else
 					ambient = false;
 			}
 			if(args.length>6){
-				if(args[6].toLowerCase()=="true" || args[6].toLowerCase()=="ja")
+				if(args[6].toLowerCase().equals("true") || args[6].toLowerCase().equals("ja"))
 					particles = true;
 				else
 					particles = false;
@@ -281,7 +284,7 @@ public class RegionEffectPlayerCommand implements CommandExecutor{
 			break;
 		case "addcondition":
 			String permission;
-			//re [region] ap [permission]
+			//re [region] ac [permission]
 	    	if(args.length < 3){
 	    		displayHelp();
 	    		return false;
@@ -301,7 +304,7 @@ public class RegionEffectPlayerCommand implements CommandExecutor{
 			sendMessage("Bedingung "+permission+" der Region "+region+" hinzugefügt.");
 			break;
 		case "removecondition":
-			//re [region] rp [permission]
+			//re [region] rc [permission]
 	    	if(args.length < 3){
 	    		displayHelp();
 	    		return false;
@@ -323,6 +326,18 @@ public class RegionEffectPlayerCommand implements CommandExecutor{
 			regionSection.set("permissions", permissionList);
 			sendMessage("Bedingung "+permission+" von der Region "+region+" entfernt.");
 			break;
+		case "clearconditions":
+			//re [region] cc
+			if(Main.regions.contains(region)){
+				regionSection = Main.regions.getConfigurationSection(region);
+			}
+			else{
+				sendMessage("Region "+region+" nicht gefunden. (Existiert nicht oder hat keine Effekte)");
+				break;
+			}
+			regionSection.set("permissions", null);
+			sendMessage("Bedingungen von der Region "+region+" entfernt.");
+			break;
 		default:
     		displayHelp();
 		}
@@ -334,11 +349,12 @@ public class RegionEffectPlayerCommand implements CommandExecutor{
 		sendMessage("-----");
 		sendMessage("/re help");
 		sendMessage("/re [Region] info (Effekt)");
-		sendMessage("/re [Region] [Aktion*] [Effekt] [Dauer=10] [Verstärker=0] [Umgebung=Nein] [Partikel=Ja] [Farbe=Standard]");
+		sendMessage("/re [Region] [Aktion*] [Effekt] [Dauer=10] [Verstärker=0] [Umgebung=Nein] [Partikel=Ja]");
 		sendMessage("/re [Region] remove [Effekt]");
 		sendMessage("/re [Region] clear");
 		sendMessage("/re [Region] addcondition [permission]");
 		sendMessage("/re [Region] removecondition [permission]");
+		sendMessage("/re [Region] clearconditions");
 		sendMessage("*Aktionen: add, addspecific, addregionOnly, addspecificregiononly");
 		sendMessage("/re help Aktionen");
     }

@@ -108,7 +108,7 @@ public class Main extends JavaPlugin implements Listener{
     			String _color = potion.getString("color");
 				Color color = parseColor(_color);
     			boolean specific = potion.getBoolean("specific");
-    			if(_color=="default" || color==null)
+    			if(_color.equals("default") || color==null)
     				potionEffect = new PotionEffect(type, duration*20, amplifier, ambient, particles);
     			else{
     				potionEffect = new PotionEffect(type, duration*20, amplifier, ambient, particles, color);
@@ -160,8 +160,89 @@ public class Main extends JavaPlugin implements Listener{
     private Color parseColor(String colordata){
     	Color result = null;
     	if(colordata.startsWith("#")){
-    		
+    		try{
+        		int r = Integer.valueOf( colordata.substring( 1, 3 ), 16 );
+        		int g = Integer.valueOf( colordata.substring( 3, 5 ), 16 );
+        		int b = Integer.valueOf( colordata.substring( 5, 7 ), 16 );
+        		result =  Color.fromRGB(r,g,b);
+    		}
+    		catch(Exception e){
+    			result = null;
+    		}
     	}
+    	if(result==null && colordata.split(",").length == 3){
+    		try{
+        		String[] rgb = colordata.split(",");
+        		int r = Integer.parseInt(rgb[0]);
+        		int g = Integer.parseInt(rgb[1]);
+        		int b = Integer.parseInt(rgb[2]);
+        		result = Color.fromRGB(r,g,b);
+    		}
+    		catch(Exception e){
+    			result = null;
+    		}
+    	}
+    	if(result==null){
+    		String upperCase = colordata.toUpperCase();
+    		switch(upperCase){
+    		case "WHITE":
+    			result =  Color.WHITE;
+    			break;
+    		case "SILVER":
+    			result =  Color.SILVER;
+    			break;
+    		case "GRAY":
+    			result =  Color.GRAY;
+    			break;
+    		case "BLACK":
+    			result =  Color.BLACK;
+    			break;
+    		case "RED":
+    			result =  Color.RED;
+    			break;
+    		case "MAROON":
+    			result =  Color.MAROON;
+    			break;
+    		case "YELLOW":
+    			result =  Color.YELLOW;
+    			break;
+    		case "OLIVE":
+    			result =  Color.OLIVE;
+    			break;
+    		case "LIME":
+    			result =  Color.LIME;
+    			break;
+    		case "GREEN":
+    			result =  Color.GREEN;
+    			break;
+    		case "AQUA":
+    			result =  Color.AQUA;
+    			break;
+    		case "TEAL":
+    			result =  Color.TEAL;
+    			break;
+    		case "BLUE":
+    			result =  Color.BLUE;
+    			break;
+    		case "NAVY":
+    			result =  Color.NAVY;
+    			break;
+    		case "FUCHSIA":
+    			result =  Color.FUCHSIA;
+    			break;
+    		case "PURPLE":
+    			result =  Color.PURPLE;
+    			break;
+    		case "ORANGE":
+    			result =  Color.ORANGE;
+    			break;
+			default:
+				result =  null;
+    			break;
+    		}
+    	}
+    	if(result == null)
+    		logger.info("RegionEffects: Invalid color given '"+colordata+"'");
     	return result;
     }
     
