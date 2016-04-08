@@ -1,0 +1,11 @@
+main: io.github.detig_iii.regioneffects.Main
+version: 1.0
+name: RegionEffects
+author: detig_iii
+description: affect players with effects when they enter or leave regions
+depend: [WorldGuard]
+commands:
+  RegionEffects:
+    description: use commands of the RegionEffect plugin
+    usage: /regioneffects
+    aliases: [re, regioneffect]
